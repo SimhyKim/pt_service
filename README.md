@@ -194,6 +194,55 @@ Invoke-RestMethod -Uri http://127.0.0.1:8000/api/v1/events -Method Post -Body $b
 
 **Надёжность** несколько реплик API за балансировщиком, резервное копирование БД
 
+## Оценка 
+Для оценки качества модели создан эндпоинт `/api/v1/training-metrics`
+
+Получить информацию можно с помощью запроса:
+```powershell
+Invoke-RestMethod -Uri http://127.0.0.1:8000/api/v1/training-metrics
+```
+
+Полученные мною метрики таковы:
+Сводные метрики, которые помогут отслеживать деградацию или стабильность модели в процессе дообучения и эксплуатации:
+| Показатель | Значение | Пояснение |
+|------------|---------:|---------:|
+| Число образцов (`n_samples`) | 24 000 | - |
+| Число кластеров (`n_clusters`) | 24 | - |
+| Силуэт, подвыборка (`silhouette_sample`) | 0,715 | Чем выше, тем в среднем точки ближе к «своему» кластеру и дальше от соседних, варьируется в промежутке [-1;1] |
+| Дэвис–Болдин (`davies_bouldin`) | 1,331 | Чем меньше, тем кластеры обычно компактнее и дальше друг от друга, но абсолютное значение сильно зависит от данных и пространства признаков, поэтому корректнее сравнивать разные итерации обучения модели |
+| Инерция K-Means (`inertia`) | 4 696,30 | сумма квадратов расстояний до центроидов в используемом пространстве |
+
+Размерность кластеров:
+
+| Кластер | Событий | Доля, % | Подпись кластера |
+|--------:|--------:|--------:|--------:|
+| 0 | 838 | 3,49 | num session · for user · session · su |
+| 1 | 3 152 | 13,13 | of memory · out of · kernel out · memory killed |
+| 2 | 2 227 | 9,28 | num · num num · logname uid · tty nodevssh |
+| 3 | 982 | 4,09 | try · try new · new blockreader · op try |
+| 4 | 978 | 4,08 | readblock · readblock datanode · datanode · datanode success |
+| 5 | 982 | 4,09 | user hadoop · hdfsfile_ blocks · hdfsfile_ · of user |
+| 6 | 984 | 4,10 | bestnode · success chosen · chosen · nodes |
+| 7 | 212 | 0,88 | num num · num · num pools · pools arcor |
+| 8 | 978 | 4,08 | block · success received · receive block · receive |
+| 9 | 983 | 4,10 | valid · valid blockreader · newblockreader · return valid |
+| 10 | 984 | 4,10 | return op_status_success · op new · op_status_success · new blocksender |
+| 11 | 974 | 4,06 | verified · verified by · verifiedbyclient · verifiedbyclient datanode |
+| 12 | 984 | 4,10 | choosedatanode dfsclient · choosedatanode · success chosennode · chosennode |
+| 13 | 978 | 4,08 | success send · send · send blk_ · sendblock |
+| 14 | 978 | 4,08 | checksumok · checksumok dfsclient · dfsclient success · dfsclient |
+| 15 | 294 | 1,23 | class · locatedblocks · getblocklocations · protocol locatedblocks |
+| 16 | 568 | 2,37 | pass user · pass · num check · check pass |
+| 17 | 334 | 1,39 | udev · udev num · node udev · device node |
+| 18 | 192 | 0,80 | num num · listening · listening on · named num |
+| 19 | 824 | 3,43 | class · protocol hdfsfilestatus · hdfsfilestatus · getfileinfo |
+| 20 | 165 | 0,69 | logrotate alert · logrotate · alert · exited abnormally |
+| 21 | 2 049 | 8,54 |num · kernel · succeeded · num num |
+| 22 | 97 | 0,40 | user task · user user · task · fs copytolocal |
+| 23 | 2 263 | 9,43 | num num · num · num connection · connection from |
+
+Также для оценки можно ввести метрику "читабельности" или "понятности": насколько аналитику SOC понятны названия кластеров и насколько они помогают ему в работе?
+
 ## Устранение проблем
 
 | Симптом | Что сделать |
